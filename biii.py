@@ -14,7 +14,12 @@ PATTERN = "json/*.json"
 SAFE_TEXT_FIELDS = (
     "field_url", "field_url_link",
     "field_workflow_author",
-    "field_author_s_", "body"
+    "field_author_s_", "body",
+    # Licensing
+    "field_license",
+    "field_licenses_costs",
+    "field_licensing",
+    "field_additional_license",
 )
 
 TAG_FIELDS = (

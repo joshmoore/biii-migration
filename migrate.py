@@ -89,7 +89,9 @@ for node in nodes:
 # 4. Add links etc.
 for node in nodes:
     for _nid, key, value in node:
-        field = key[6:]
+        field = key
+        if key.startswith("field_"):
+            field = key[6:]
         if key in TARGET_FIELDS:
             for tid in value:
                 tid = tid["target_id"]
@@ -102,7 +104,7 @@ for node in nodes:
             for tid in value:
                 saf = tid.get("safe_value", None)
                 val = tid["value"]
-                fmt = tid["format"]
+                fmt = tid.get("format", None)
                 cur.execute(safe1_ins, [_nid, field, saf, val, fmt, _nid, field])
         elif key in VALUE_FIELDS:
             for tid in value:
