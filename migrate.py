@@ -16,28 +16,44 @@ def parse(fname):
                     value = value["und"]
             yield _vid, key, value
 
+PATTERN = "json/*.json"
+SAFE_TEXT_FIELDS = (
+    "field_url", "field_url_link",
+    "field_workflow_author",
+    "field_author_s_", "body"
+)
+TAG_FIELDS = (
+    "field_tags",
+    "field_ttest",  # Used minimally in workflows
+)
+
+
+TODO = """
+ - body has more fields
+ - cleanup 'mhmzmgso'
+"""
+
 columns = set()
 counts = defaultdict(int)
 types = defaultdict(set)
-total = len(glob("*.fix"))
+total = len(glob(PATTERN))
+
+handled = set()
 printed = set()
 
-for fname in glob("*.fix"):
+
+for fname in glob(PATTERN):
     for _vid, key, value in parse(fname):
         counts[key] += 1
         types[key].add(type(value))
         if type(value) == unicode:
             columns.add(key.replace("#", ""))
-        elif key in (
-            "body",  # TODO: has more fields
-            "field_tags",
-            "field_url",
-            "field_url_link",
-            "field_workflow_author",
-            "field_data_url",
-        ):
+            handled.add(key)
+        elif key in SAFE_TEXT_FIELDS \
+            or key in TAG_FIELDS \
+            or key == "field_data_url":
             # These are handled specially below.
-            pass
+            handled.add(key)
         elif type(value) == list:
             if key not in printed:
                 printed.add(key)
@@ -51,7 +67,7 @@ values = counts.items()
 values.sort(lambda a, b: cmp(a[1], b[1]))
 for k, v in values:
     T = [str(x) for x in types[k]]
-    if T != [str(unicode)]:
+    if k in printed:
         print "%30s\t%8s\t%30s" % (k, v, ", ".join(T))
 
 conn = psycopg2.connect("dbname='biii'")
@@ -62,7 +78,7 @@ if not bool(cur.rowcount):
     cur.execute("create table node (vid text primary key, %s text)" % cols)
     conn.commit()
 
-for fname in glob("*.fix"):
+for fname in glob(PATTERN):
     cols = list()
     vals = list()
     for _vid, key, value in parse(fname):
@@ -73,7 +89,17 @@ for fname in glob("*.fix"):
         elif "#%s" in columns:
             cols.append(key.replace("#", ""))
             vals.append(value)
-        elif "field_tags" == key:
+#       elif "field_language" = key:
+#           for tid in value:
+#               tid = tid["target_id"]
+#               query = (
+#                   "insert into tags (node, term) select %s, %s where not exists ("
+#                   "  select node, term from tags where node = %s and term = %s"
+#                   ")"
+#               )
+#               cur.execute(query, [_vid, tid, _vid, tid])
+#               conn.commit()
+        elif key in TAG_FIELDS:
             for tid in value:
                 tid = tid["tid"]
                 query = (
@@ -83,7 +109,10 @@ for fname in glob("*.fix"):
                 )
                 cur.execute(query, [_vid, tid, _vid, tid])
                 conn.commit()
-        elif key in ("field_url", "field_url_link", "field_workflow_author", "body"):
+        elif key in SAFE_TEXT_FIELDS:
+            if key == "field_ttest":
+                import pdb
+                pdb.set_trace()
             for tid in value:
                 saf = tid.get("safe_value", None)
                 val = tid["value"]
