@@ -11,6 +11,11 @@ import psycopg2
 
 PATTERN = "json/*.json"
 
+RATING_FIELDS = (
+    "field_rating",
+    "field_workflow_rating",
+)
+
 SAFE_TEXT_FIELDS = (
     "field_url", "field_url_link",
     "field_workflow_author",
@@ -113,6 +118,13 @@ link_ins = (
     "where not exists ("
     "  select parent, child from links "
     "where parent = %s and child = %s and type = %s"
+    ")"
+)
+
+rating_ins = (
+    "insert into safe_text (nid, field, value) "
+    "select %s, %s, %s where not exists ("
+    "  select nid, field from safe_text where nid = %s and field = %s"
     ")"
 )
 

@@ -2,12 +2,14 @@
 
 from biii import Node
 from biii import PATTERN
+from biii import RATING_FIELDS
 from biii import SAFE_TEXT_FIELDS
 from biii import TAG_FIELDS
 from biii import TARGET_FIELDS
 from biii import VALUE_FIELDS
 from biii import link_ins
 from biii import open_db
+from biii import rating_ins
 from biii import safe1_ins
 from biii import safe2_ins
 from biii import tags_ins
@@ -28,6 +30,11 @@ printed = set()
 nodes = [Node(fname) for fname in glob(PATTERN)]
 
 # 2. Parse the various columns
+all_fields = set()
+for x in (RATING_FIELDS, SAFE_TEXT_FIELDS, TAG_FIELDS,
+          TARGET_FIELDS, VALUE_FIELDS):
+    all_fields.update(x)
+
 for node in nodes:
     for _nid, key, value in node:
         counts[key] += 1
@@ -35,11 +42,7 @@ for node in nodes:
         if type(value) == unicode:
             columns.add(key.replace("#", ""))
             handled.add(key)
-        elif key in SAFE_TEXT_FIELDS \
-            or key in TAG_FIELDS \
-                or key in TARGET_FIELDS \
-                    or key in VALUE_FIELDS \
-                        or key == "field_data_url":
+        elif key in all_fields or key == "field_data_url":
             # These are handled specially below.
             handled.add(key)
         elif type(value) == list:
@@ -91,7 +94,13 @@ for node in nodes:
         field = key
         if key.startswith("field_"):
             field = key[6:]
-        if key in TARGET_FIELDS:
+
+        if key in RATING_FIELDS:
+            for rating in value:
+                assert not rating["target"]
+                r = rating["rating"]
+                cur.execute(rating_ins, [_nid, field, r, _nid, field])
+        elif key in TARGET_FIELDS:
             for tid in value:
                 tid = tid["target_id"]
                 cur.execute(link_ins, [_nid, tid, field, _nid, tid, field])
