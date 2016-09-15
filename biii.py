@@ -27,6 +27,11 @@ TARGET_FIELDS = (
     "field_package_library_wf",
 )
 
+VALUE_FIELDS = (
+    "field_data_url",
+    "field_link",
+)
+
 TODO = """
  - body has more fields
  - cleanup 'mhmzmgso'

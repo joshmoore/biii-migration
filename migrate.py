@@ -5,6 +5,7 @@ from biii import PATTERN
 from biii import SAFE_TEXT_FIELDS
 from biii import TAG_FIELDS
 from biii import TARGET_FIELDS
+from biii import VALUE_FIELDS
 from biii import link_ins
 from biii import open_db
 from biii import safe1_ins
@@ -38,7 +39,8 @@ for node in nodes:
         elif key in SAFE_TEXT_FIELDS \
             or key in TAG_FIELDS \
                 or key in TARGET_FIELDS \
-                    or key == "field_data_url":
+                    or key in VALUE_FIELDS \
+                        or key == "field_data_url":
             # These are handled specially below.
             handled.add(key)
         elif type(value) == list:
@@ -87,11 +89,11 @@ for node in nodes:
 # 4. Add links etc.
 for node in nodes:
     for _nid, key, value in node:
+        field = key[6:]
         if key in TARGET_FIELDS:
-            type = key[6:]
             for tid in value:
                 tid = tid["target_id"]
-                cur.execute(link_ins, [_nid, tid, type, _nid, tid, type])
+                cur.execute(link_ins, [_nid, tid, field, _nid, tid, field])
         elif key in TAG_FIELDS:
             for tid in value:
                 tid = tid["tid"]
@@ -101,11 +103,11 @@ for node in nodes:
                 saf = tid.get("safe_value", None)
                 val = tid["value"]
                 fmt = tid["format"]
-                cur.execute(safe1_ins, [_nid, key, saf, val, fmt, _nid, key])
-        elif key in ("field_data_url",):
+                cur.execute(safe1_ins, [_nid, field, saf, val, fmt, _nid, field])
+        elif key in VALUE_FIELDS:
             for tid in value:
                 val = tid["value"]
-                cur.execute(safe2_ins, [_nid, key, None, val, None, _nid, key])
+                cur.execute(safe2_ins, [_nid, field, None, val, None, _nid, field])
     conn.commit()
 
 conn.close()
