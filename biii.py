@@ -25,6 +25,7 @@ TAG_FIELDS = (
 TARGET_FIELDS = (
     "field_language",
     "field_package_library_wf",
+    "field_package_library",
 )
 
 VALUE_FIELDS = (
