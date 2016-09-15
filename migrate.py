@@ -90,21 +90,22 @@ tags_ins = (
 #
 
 
-def parse(fname):
-    """
-    Generation method which provides key/value pairs for each
-    node id in a json file.
-    """
-    with open(fname, "r") as f:
-        data = load(f)
-        _nid = data["nid"]
-        for key, value in data.items():
+class Node(object):
+
+    def __init__(self, fname):
+        self.fname = fname
+        with open(fname, "r") as f:
+            self.data = load(f)
+        self.nid = self.data["nid"]
+
+    def __iter__(self):
+        for key, value in self.data.items():
             if not value:
                 continue
             if isinstance(value, dict):
                 if "und" in value:
                     value = value["und"]
-            yield _nid, key, value
+            yield self.nid, key, value
 
 
 def open_db():
@@ -140,8 +141,9 @@ handled = set()
 printed = set()
 
 
-for fname in glob(PATTERN):
-    for _nid, key, value in parse(fname):
+nodes = [Node(fname) for fname in glob(PATTERN)]
+for node in nodes:
+    for _nid, key, value in node:
         counts[key] += 1
         types[key].add(type(value))
         if type(value) == unicode:
@@ -170,10 +172,10 @@ for k, v in values:
 
 
 conn, cur = open_db()
-for fname in glob(PATTERN):
+for node in nodes:
     cols = list()
     vals = list()
-    for _nid, key, value in parse(fname):
+    for _nid, key, value in node:
         if not value:
             continue
         if key in columns:
