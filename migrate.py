@@ -8,13 +8,13 @@ import psycopg2
 def parse(fname):
     with open(fname, "r") as f:
         data = load(f)
-        _vid = data["vid"]
+        _nid = data["nid"]
         for key, value in data.items():
             if not value: continue
             if isinstance(value, dict):
                 if "und" in value:
                     value = value["und"]
-            yield _vid, key, value
+            yield _nid, key, value
 
 PATTERN = "json/*.json"
 SAFE_TEXT_FIELDS = (
@@ -31,6 +31,7 @@ TAG_FIELDS = (
 TODO = """
  - body has more fields
  - cleanup 'mhmzmgso'
+ - field_task_annotation_descriptio = sample data term or url...
 """
 
 columns = set()
@@ -43,7 +44,7 @@ printed = set()
 
 
 for fname in glob(PATTERN):
-    for _vid, key, value in parse(fname):
+    for _nid, key, value in parse(fname):
         counts[key] += 1
         types[key].add(type(value))
         if type(value) == unicode:
@@ -74,14 +75,23 @@ conn = psycopg2.connect("dbname='biii'")
 cur = conn.cursor()
 cur.execute("select * from information_schema.tables where table_name=%s", ('node',))
 if not bool(cur.rowcount):
-    cols = " text, ".join([x for x in sorted(columns) if x != "vid"])
-    cur.execute("create table node (vid text primary key, %s text)" % cols)
+    cols = " text, ".join([x for x in sorted(columns) if x != "nid"])
+    cur.execute("create table node (nid text primary key, %s text)" % cols)
+    cur.execute("create table term (tid text primary key, term text)")
+    cur.execute("create table tags (node text references node(nid), term text references term(tid))")
+    cur.execute("create table langs (node text references node(nid), lang text references node(nid))")
+    cur.execute("create table safe_text (nid text references node(nid), field text, safe_value text, value text, format text)")
+    with open("terms.tsv", "r") as f:
+        cur.copy_from(f, "term")
+    cur.execute("create index node_index on node(nid)")
+    cur.execute("create index term_index on term(tid)")
+    cur.execute("create index tag_index on tags(node, term)")
     conn.commit()
 
 for fname in glob(PATTERN):
     cols = list()
     vals = list()
-    for _vid, key, value in parse(fname):
+    for _nid, key, value in parse(fname):
         if not value: continue
         if key in columns:
             cols.append(key)
@@ -89,16 +99,20 @@ for fname in glob(PATTERN):
         elif "#%s" in columns:
             cols.append(key.replace("#", ""))
             vals.append(value)
-#       elif "field_language" = key:
-#           for tid in value:
-#               tid = tid["target_id"]
-#               query = (
-#                   "insert into tags (node, term) select %s, %s where not exists ("
-#                   "  select node, term from tags where node = %s and term = %s"
-#                   ")"
-#               )
-#               cur.execute(query, [_vid, tid, _vid, tid])
-#               conn.commit()
+        elif "field_language" == key:
+            for tid in value:
+                tid = tid["target_id"]
+                query = (
+                    "insert into langs (node, lang) select %s, %s where not exists ("
+                    "  select node, lang from langs where node = %s and lang = %s"
+                    ")"
+                )
+                try:
+                    cur.execute(query, [_nid, tid, _nid, tid])
+                    conn.commit()
+                except psycopg2.IntegrityError, ie:
+                    print fname, _nid, key, value
+                    raise ie
         elif key in TAG_FIELDS:
             for tid in value:
                 tid = tid["tid"]
@@ -107,7 +121,7 @@ for fname in glob(PATTERN):
                     "  select node, term from tags where node = %s and term = %s"
                     ")"
                 )
-                cur.execute(query, [_vid, tid, _vid, tid])
+                cur.execute(query, [_nid, tid, _nid, tid])
                 conn.commit()
         elif key in SAFE_TEXT_FIELDS:
             if key == "field_ttest":
@@ -118,33 +132,33 @@ for fname in glob(PATTERN):
                 val = tid["value"]
                 fmt = tid["format"]
                 query = (
-                    "insert into safe_text (vid, field, safe_value, value, format) "
+                    "insert into safe_text (nid, field, safe_value, value, format) "
                     "select %s, %s, %s, %s, %s where not exists ("
-                    "  select vid, field from safe_text where vid = %s and field = %s"
+                    "  select nid, field from safe_text where nid = %s and field = %s"
                     ")"
                 )
-                cur.execute(query, [_vid, key, saf, val, fmt, _vid, key])
+                cur.execute(query, [_nid, key, saf, val, fmt, _nid, key])
                 conn.commit()
         elif key in ("field_data_url",):
             for tid in value:
                 val = tid["value"]
                 query = (
-                    "insert into safe_text (vid, field, safe_value, value, format) "
+                    "insert into safe_text (nid, field, safe_value, value, format) "
                     "select %s, %s, %s, %s, %s where not exists ("
-                    "  select vid, field from safe_text where vid = %s and field = %s"
+                    "  select nid, field from safe_text where nid = %s and field = %s"
                     ")"
                 )
-                cur.execute(query, [_vid, key, None, val, None, _vid, key])
+                cur.execute(query, [_nid, key, None, val, None, _nid, key])
                 conn.commit()
 
     query = (
         "insert into node (%s) select %s where not exists ("
-        "  select vid from node where vid = '%s'"
+        "  select nid from node where nid = '%s'"
         ")"
     ) % (
         ", ".join(cols),
         ", ".join(["%s" for x in vals]),
-        _vid,
+        _nid,
     )
     cur.execute(query, vals)
     conn.commit()
