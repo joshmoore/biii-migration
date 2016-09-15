@@ -24,8 +24,8 @@ def string_to_c(s, max_length = 140, unicode=False):
         if c == "\n":
             to_add = "\\\n"
             newline = True
-        elif ord(c) < 32 or 0x80 <= ord(c) <= 0xff:
-            to_add = "\\x%02x" % ord(c)
+        #elif ord(c) < 32 or 0x80 <= ord(c) <= 0xff:
+        #    to_add = "\\x%02x" % ord(c)
         elif ord(c) > 0xff:
             if not unicode:
                 raise ValueError, "string contains unicode character but unicode=False"
@@ -52,6 +52,8 @@ def string_to_c(s, max_length = 140, unicode=False):
     return "".join(ret)
 
 print "@prefix : <#>."
+print "@prefix xsd: <http://www.w3.org/2001/XMLSchema#>."
+print ""
 
 conn, cur = open_db(cursor_factory=extras.RealDictCursor)
 cur.execute("select * from node")
@@ -60,8 +62,8 @@ try:
         node = dict(node)
         nid = node.pop("nid")
         for k, v in sorted(node.items()):
-            if v:
-                print ':node_%s :%s %s^^xsd:string.' % (nid, k, string_to_c(v))
+            if v and k != "data":
+                print ':node_%s :%s """ %s """^^xsd:string.' % (nid, k, v)
 
     # Load tags
     cur.execute((
@@ -79,7 +81,7 @@ try:
     ))
     for text in cur:
         if text["value"]:
-            print ':node_%s :%s %s^^xsd:string .' % (
-                text["nid"], text["field"], string_to_c(text["value"]))
+            print ':node_%s :%s """ %s """^^xsd:string .' % (
+                text["nid"], text["field"], text["value"])
 finally:
     conn.close()
