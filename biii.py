@@ -29,6 +29,19 @@ SAFE_TEXT_FIELDS = (
     "field_dimensions_of_the_data",
     "field_input_data_type",
     "field_output_data_type",
+    # Rest
+    "field_references",
+    "field_interoperates_with",
+    "field_installation",
+    "field_development_tools",
+    "field_ways_to_deploy",
+    "field_implementations",
+    "field_license_costs",
+    "field_interfaces_to_other_langua",
+    "field_training_topic",
+    "field_comments",
+    "field_biological_object",
+    "field_contributor",
 )
 
 TAG_FIELDS = (
