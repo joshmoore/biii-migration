@@ -79,6 +79,7 @@ TODO = """
  - body has more fields
  - cleanup 'mhmzmgso'
  - field_task_annotation_descriptio = sample data term or url...
+ - synonyms, esp. around "wf"/"workflow"
 """
 
 #
