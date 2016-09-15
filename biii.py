@@ -108,7 +108,7 @@ class Node(object):
             yield self.nid, key, value
 
 
-def open_db(cursor_factory=None):
+def open_db(columns=None, cursor_factory=None):
     """
     Open a cursor to the biii database, creating tables once.
     """
@@ -116,7 +116,8 @@ def open_db(cursor_factory=None):
     conn = psycopg2.connect("dbname='biii'")
     cur = conn.cursor(cursor_factory=cursor_factory)
     cur.execute(schema_sql, ('node',))
-    if not bool(cur.rowcount):
+    # If no columns are passed, don't try to initialize
+    if columns and not bool(cur.rowcount):
         cols = " text, ".join([x for x in sorted(columns) if x != "nid"])
         cur.execute(node_sql % cols)
         cur.execute(term_sql)

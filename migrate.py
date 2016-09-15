@@ -57,7 +57,7 @@ for k, v in values:
 
 
 # 3. Setup db and create nodes
-conn, cur = open_db()
+conn, cur = open_db(columns)
 
 for node in nodes:
     cols = list()
