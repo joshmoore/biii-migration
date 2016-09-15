@@ -58,7 +58,7 @@ TARGET_FIELDS = (
 )
 
 VALUE_FIELDS = (
-    # TODO: some of these may additionally have attributes
+    # Note: we assume attributes are empty
     "field_data_url",
     "field_link",
     "field_dimension",
@@ -67,6 +67,7 @@ VALUE_FIELDS = (
     "field_filename_or_url",
     "field_size_mb_",
     "field_url_func",
+    "field_example_image_url",
 )
 
 TODO = """
@@ -98,7 +99,7 @@ links_sql = (
 
 safe_sql = (
     "create table safe_text (nid text references node(nid), "
-    "field text, safe_value text, value text, format text)"
+    "field text, safe_value text, value text, format text, title text)"
 )
 
 node_idx = "create index node_index on node(nid)"
@@ -116,15 +117,15 @@ link_ins = (
 )
 
 safe1_ins = (
-    "insert into safe_text (nid, field, safe_value, value, format) "
-    "select %s, %s, %s, %s, %s where not exists ("
+    "insert into safe_text (nid, field, safe_value, value, format, title) "
+    "select %s, %s, %s, %s, %s, %s where not exists ("
     "  select nid, field from safe_text where nid = %s and field = %s"
     ")"
 )
 
 safe2_ins = (
-    "insert into safe_text (nid, field, safe_value, value, format) "
-    "select %s, %s, %s, %s, %s where not exists ("
+    "insert into safe_text (nid, field, safe_value, value, format, title) "
+    "select %s, %s, %s, %s, %s, %s where not exists ("
     "  select nid, field from safe_text where nid = %s and field = %s"
     ")"
 )

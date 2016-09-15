@@ -105,11 +105,15 @@ for node in nodes:
                 saf = tid.get("safe_value", None)
                 val = tid["value"]
                 fmt = tid.get("format", None)
-                cur.execute(safe1_ins, [_nid, field, saf, val, fmt, _nid, field])
+                title = tid.get("title", None)
+                assert not tid.get("attributes")
+                cur.execute(safe1_ins, [_nid, field, saf, val, fmt, title, _nid, field])
         elif key in VALUE_FIELDS:
             for tid in value:
                 val = tid["value"]
-                cur.execute(safe2_ins, [_nid, field, None, val, None, _nid, field])
+                title = tid.get("title", None)
+                assert not tid.get("attributes")
+                cur.execute(safe2_ins, [_nid, field, None, val, None, title, _nid, field])
     conn.commit()
 
 conn.close()
