@@ -15,11 +15,20 @@ SAFE_TEXT_FIELDS = (
     "field_url", "field_url_link",
     "field_workflow_author",
     "field_author_s_", "body",
+    "field_platform",
+    "field_platforms",
+    "field_type",
     # Licensing
     "field_license",
     "field_licenses_costs",
     "field_licensing",
     "field_additional_license",
+    # Other
+    "field_target_audience",
+    "field_ecosystem",
+    "field_dimensions_of_the_data",
+    "field_input_data_type",
+    "field_output_data_type",
 )
 
 TAG_FIELDS = (
@@ -31,11 +40,13 @@ TARGET_FIELDS = (
     "field_language",
     "field_package_library_wf",
     "field_package_library",
+    "field_workflow",
 )
 
 VALUE_FIELDS = (
     "field_data_url",
     "field_link",
+    "field_dimension",
 )
 
 TODO = """
