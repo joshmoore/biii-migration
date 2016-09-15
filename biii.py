@@ -54,12 +54,19 @@ TARGET_FIELDS = (
     "field_package_library_wf",
     "field_package_library",
     "field_workflow",
+    "field_sample_data",
 )
 
 VALUE_FIELDS = (
+    # TODO: some of these may additionally have attributes
     "field_data_url",
     "field_link",
     "field_dimension",
+    "field_annotations_url",
+    "field_scale",
+    "field_filename_or_url",
+    "field_size_mb_",
+    "field_url_func",
 )
 
 TODO = """
