@@ -14,7 +14,6 @@ from biii import tags_ins
 
 from glob import glob
 from collections import defaultdict
-import psycopg2
 
 
 columns = set()
@@ -107,13 +106,17 @@ for node in nodes:
                 fmt = tid.get("format", None)
                 title = tid.get("title", None)
                 assert not tid.get("attributes")
-                cur.execute(safe1_ins, [_nid, field, saf, val, fmt, title, _nid, field])
+                cur.execute(safe1_ins,
+                            [_nid, field, saf, val, fmt, title,
+                             _nid, field])
         elif key in VALUE_FIELDS:
             for tid in value:
                 val = tid["value"]
                 title = tid.get("title", None)
                 assert not tid.get("attributes")
-                cur.execute(safe2_ins, [_nid, field, None, val, None, title, _nid, field])
+                cur.execute(safe2_ins,
+                            [_nid, field, None, val, None, title,
+                             _nid, field])
     conn.commit()
 
 conn.close()
