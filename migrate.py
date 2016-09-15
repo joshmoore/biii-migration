@@ -4,7 +4,8 @@ from biii import Node
 from biii import PATTERN
 from biii import SAFE_TEXT_FIELDS
 from biii import TAG_FIELDS
-from biii import lang_ins
+from biii import TARGET_FIELDS
+from biii import link_ins
 from biii import open_db
 from biii import safe1_ins
 from biii import safe2_ins
@@ -36,7 +37,8 @@ for node in nodes:
             handled.add(key)
         elif key in SAFE_TEXT_FIELDS \
             or key in TAG_FIELDS \
-                or key == "field_data_url":
+                or key in TARGET_FIELDS \
+                    or key == "field_data_url":
             # These are handled specially below.
             handled.add(key)
         elif type(value) == list:
@@ -85,14 +87,11 @@ for node in nodes:
 # 4. Add links etc.
 for node in nodes:
     for _nid, key, value in node:
-        if "field_language" == key:
+        if key in TARGET_FIELDS:
+            type = key[6:]
             for tid in value:
                 tid = tid["target_id"]
-                try:
-                    cur.execute(lang_ins, [_nid, tid, _nid, tid])
-                except psycopg2.IntegrityError, ie:
-                    print fname, _nid, key, value
-                    raise ie
+                cur.execute(link_ins, [_nid, tid, type, _nid, tid, type])
         elif key in TAG_FIELDS:
             for tid in value:
                 tid = tid["tid"]

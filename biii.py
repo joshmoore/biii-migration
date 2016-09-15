@@ -22,6 +22,11 @@ TAG_FIELDS = (
     "field_ttest",  # Used minimally in workflows
 )
 
+TARGET_FIELDS = (
+    "field_language",
+    "field_package_library_wf",
+)
+
 TODO = """
  - body has more fields
  - cleanup 'mhmzmgso'
@@ -43,9 +48,10 @@ tags_sql = (
     "term text references term(tid))"
 )
 
-langs_sql = (
-    "create table langs (node text references node(nid), "
-    "lang text references node(nid))"
+links_sql = (
+    "create table links (parent text references node(nid), "
+    "child text references node(nid), "
+    "type text)"
 )
 
 safe_sql = (
@@ -59,9 +65,11 @@ term_idx = "create index term_index on term(tid)"
 
 tags_idx = "create index tag_index on tags(node, term)"
 
-lang_ins = (
-    "insert into langs (node, lang) select %s, %s where not exists ("
-    "  select node, lang from langs where node = %s and lang = %s"
+link_ins = (
+    "insert into links (parent, child, type) select %s, %s, %s "
+    "where not exists ("
+    "  select parent, child from links "
+    "where parent = %s and child = %s and type = %s"
     ")"
 )
 
@@ -122,7 +130,7 @@ def open_db(columns=None, cursor_factory=None):
         cur.execute(node_sql % cols)
         cur.execute(term_sql)
         cur.execute(tags_sql)
-        cur.execute(langs_sql)
+        cur.execute(links_sql)
         cur.execute(safe_sql)
         with open("terms.tsv", "r") as f:
             cur.copy_from(f, "term")
