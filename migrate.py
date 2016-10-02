@@ -9,6 +9,8 @@ from biii import TARGET_FIELDS
 from biii import VALUE_FIELDS
 from biii import link_ins
 from biii import open_db
+from biii import biblio_ins
+from biii import node_ins
 from biii import rating_ins
 from biii import safe1_ins
 from biii import safe2_ins
@@ -19,6 +21,7 @@ from collections import defaultdict
 
 
 columns = set()
+bibcols = set()
 counts = defaultdict(int)
 types = defaultdict(set)
 total = len(glob(PATTERN))

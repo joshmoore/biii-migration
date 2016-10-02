@@ -90,6 +90,11 @@ schema_sql = "select * from information_schema.tables where table_name=%s"
 
 node_sql = "create table node (nid text primary key, %s text)"
 
+biblio_sql = (
+    "create table biblio (nid text references node(nid), %s text, "
+    "primary key (nid))"
+)
+
 term_sql = "create table term (tid text primary key, term text)"
 
 tags_sql = (
@@ -119,6 +124,18 @@ link_ins = (
     "where not exists ("
     "  select parent, child from links "
     "where parent = %s and child = %s and type = %s"
+    ")"
+)
+
+biblio_ins = (
+    "insert into biblio (%s) select %s where not exists ("
+    "  select nid from biblio where nid = '%s'"
+    ")"
+)
+
+node_ins = (
+    "insert into node (%s) select %s where not exists ("
+    "  select nid from node where nid = '%s'"
     ")"
 )
 
@@ -172,7 +189,7 @@ class Node(object):
             yield self.nid, key, value
 
 
-def open_db(columns=None, cursor_factory=None):
+def open_db(columns=None, biblio=None, cursor_factory=None):
     """
     Open a cursor to the biii database, creating tables once.
     """
@@ -183,7 +200,9 @@ def open_db(columns=None, cursor_factory=None):
     # If no columns are passed, don't try to initialize
     if columns and not bool(cur.rowcount):
         cols = " text, ".join([x for x in sorted(columns) if x != "nid"])
+        bibs = " text, ".join([x for x in sorted(biblio) if x != "nid"])
         cur.execute(node_sql % cols)
+        cur.execute(biblio_sql % bibs)
         cur.execute(term_sql)
         cur.execute(tags_sql)
         cur.execute(links_sql)
